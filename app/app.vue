@@ -9,7 +9,11 @@ useHead({
   htmlAttrs: {
     lang: "en",
   },
-  link: [{ href: "/favicon.ico", rel: "icon" }],
+  link: [
+    { href: "/favicon.ico", rel: "icon", sizes: "32x32" },
+    { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
+    { href: "/apple-touch-icon.png", rel: "apple-touch-icon" },
+  ],
   meta: [
     { charset: "utf-8" },
     { name: "viewport", content: "width=device-width, initial-scale=1" },
