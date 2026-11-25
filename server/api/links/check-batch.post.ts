@@ -11,6 +11,7 @@ const bodySchema = z.object({ ids: z.array(z.string()).min(1).max(500) });
 /**
  * Checks the destination URLs of the given links (the current user's only),
  * keyed by id. The links page sends the ones that failed its browser check.
+ * Disabled links are skipped and left out of the result.
  */
 export default defineEventHandler(async (event) => {
   const { user } = await requireUserSession(event);
@@ -30,7 +31,8 @@ export default defineEventHandler(async (event) => {
 
   const links = await prisma.link.findMany({
     select: { id: true, url: true },
-    where: { id: { in: body.data.ids }, userId: user.id },
+    // Disabled links don't redirect, so their destinations aren't checked
+    where: { enabled: true, id: { in: body.data.ids }, userId: user.id },
   });
 
   const resultsByUrl = await checkSpacedByHost(

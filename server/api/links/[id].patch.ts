@@ -38,16 +38,23 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (body.data.url) {
-    // Only re-check when the destination actually changes, so editing the
-    // description of a link whose site is down still works
+  if (body.data.url !== undefined || body.data.enabled !== undefined) {
     const current = await prisma.link.findFirst({
-      select: { url: true },
+      select: { enabled: true, url: true },
       where: { id, userId: user.id },
     });
 
-    if (current && current.url !== body.data.url) {
-      const check = await checkUrl(body.data.url);
+    const url = body.data.url ?? current?.url;
+    const enabled = body.data.enabled ?? current?.enabled;
+
+    // Check only links that will be live, and only when the destination
+    // changes or the link is being re-enabled. Editing the description of a
+    // link whose site is down still works, and disabled links aren't checked.
+    const needsCheck =
+      current && url && enabled && (url !== current.url || !current.enabled);
+
+    if (needsCheck) {
+      const check = await checkUrl(url);
 
       if (check.status === "error") {
         throw createError({

@@ -27,13 +27,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const check = await checkUrl(body.data.url);
+  // Disabled links don't redirect, so their destination isn't checked
+  if (body.data.enabled) {
+    const check = await checkUrl(body.data.url);
 
-  if (check.status === "error") {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Destination does not resolve: ${check.message}`,
-    });
+    if (check.status === "error") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Destination does not resolve: ${check.message}`,
+      });
+    }
   }
 
   return await prisma.link.create({

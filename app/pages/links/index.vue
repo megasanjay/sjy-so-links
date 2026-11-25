@@ -113,7 +113,8 @@ const browserCheck = async (url: string) => {
 };
 
 const checkAllLinks = async () => {
-  const all = links.value ?? [];
+  // Disabled links don't redirect, so their destinations don't matter
+  const all = (links.value ?? []).filter((link) => link.enabled);
 
   if (all.length === 0) return;
 
@@ -225,8 +226,8 @@ const isHttpUrl = (value: string) => {
 };
 
 watchDebounced(
-  () => [modalOpen.value, form.url] as const,
-  async ([open, value]) => {
+  () => [modalOpen.value, form.url, form.enabled] as const,
+  async ([open, value, enabled]) => {
     const id = ++urlCheckId;
     const url = value.trim();
 
@@ -234,11 +235,19 @@ watchDebounced(
 
     if (!open || !url) return;
 
+    // Format problems still block saving, but a disabled link's destination
+    // isn't fetched
     if (!isHttpUrl(url)) {
       urlCheck.value = {
         message: "Enter a full http:// or https:// URL",
         status: "error",
       };
+
+      return;
+    }
+
+    if (!enabled) {
+      checkingUrl.value = false;
 
       return;
     }
@@ -350,6 +359,13 @@ const toggleField = async (
       method: "PATCH",
     });
     link[field] = value;
+
+    // Disabled links aren't checked, so drop any stale result
+    if (field === "enabled" && !value) {
+      const { [link.id]: _removed, ...rest } = linkChecks.value;
+
+      linkChecks.value = rest;
+    }
   } catch (error) {
     toast.add({
       color: "error",
@@ -474,10 +490,24 @@ const copyLink = async (link: LinkRow) => {
         </template>
 
         <template #listed-cell="{ row }">
-          <USwitch
-            :model-value="row.original.listed"
-            @update:model-value="toggleField(row.original, 'listed', $event)"
-          />
+          <UTooltip
+            :text="
+              row.original.enabled
+                ? undefined
+                : 'Disabled links are never listed'
+            "
+            :disabled="row.original.enabled"
+          >
+            <span class="inline-flex">
+              <USwitch
+                :model-value="row.original.listed"
+                :disabled="!row.original.enabled"
+                @update:model-value="
+                  toggleField(row.original, 'listed', $event)
+                "
+              />
+            </span>
+          </UTooltip>
         </template>
 
         <template #actions-cell="{ row }">
@@ -595,8 +625,13 @@ const copyLink = async (link: LinkRow) => {
           <UFormField name="listed">
             <USwitch
               v-model="form.listed"
+              :disabled="!form.enabled"
               label="Show in sitemap"
-              description="List this link in sitemap.xml and llms.txt"
+              :description="
+                form.enabled
+                  ? 'List this link in sitemap.xml and llms.txt'
+                  : 'Disabled links are never listed'
+              "
             />
           </UFormField>
         </form>
