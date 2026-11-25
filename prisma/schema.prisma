@@ -1,0 +1,62 @@
+generator client {
+    provider        = "prisma-client"
+    previewFeatures = ["strictUndefinedChecks"]
+    output          = "../shared/generated/"
+    engineType      = "client"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id String @id @default(cuid(2))
+
+    givenName  String @default("") // first name
+    familyName String @default("") // last name
+
+    emailAddress String @unique
+    password     String // argon2 hash
+
+    created DateTime @default(now())
+    updated DateTime @updatedAt
+
+    links Link[]
+}
+
+/// A short link: visiting /<slug> redirects to `url`.
+model Link {
+    id String @id @default(cuid(2))
+
+    slug        String  @unique // the path segment, e.g. "gh" for /gh
+    url         String // destination URL
+    description String  @default("")
+    enabled     Boolean @default(true) // disabled links return 404
+
+    userId String // owner; slugs are still unique across all users
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    created DateTime @default(now())
+    updated DateTime @updatedAt
+
+    clicks Click[]
+
+    @@index([userId])
+}
+
+/// One row per redirect served.
+model Click {
+    id String @id @default(cuid(2))
+
+    linkId String
+    link   Link   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+    referrer  String? // Referer header, if any
+    userAgent String?
+    country   String? // from a CDN header (e.g. CF-IPCountry), if present
+    ipHash    String? // salted SHA-256 of the client IP, for unique-visitor counts
+
+    created DateTime @default(now())
+
+    @@index([linkId, created])
+}
