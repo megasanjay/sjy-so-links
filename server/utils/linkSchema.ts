@@ -4,6 +4,7 @@ import { isValidSlug } from "#shared/utils/slug";
 export const linkSchema = z.object({
   description: z.string().trim().max(500).default(""),
   enabled: z.boolean().default(true),
+  listed: z.boolean().default(true),
   slug: z
     .string()
     .trim()

@@ -6,10 +6,10 @@ import prisma from "#server/utils/prisma";
 export const siteOrigin = (event: H3Event) =>
   getRequestURL(event, { xForwardedHost: true, xForwardedProto: true }).origin;
 
-/** Every enabled short link, across all users, for robots/sitemap/llms.txt. */
+/** Every enabled, listed short link, across all users, for sitemap/llms.txt. */
 export const getPublicLinks = () =>
   prisma.link.findMany({
     orderBy: { slug: "asc" },
     select: { description: true, slug: true, updated: true },
-    where: { enabled: true },
+    where: { enabled: true, listed: true },
   });

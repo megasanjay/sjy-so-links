@@ -32,6 +32,7 @@ model Link {
     url         String // destination URL
     description String  @default("")
     enabled     Boolean @default(true) // disabled links return 404
+    listed      Boolean @default(true) // shown in sitemap.xml and llms.txt
 
     userId String // owner; slugs are still unique across all users
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

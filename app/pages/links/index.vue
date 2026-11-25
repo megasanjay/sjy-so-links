@@ -61,6 +61,7 @@ const columns: TableColumn<LinkRow>[] = [
   { accessorKey: "clickCount", header: "Clicks" },
   { accessorKey: "lastClicked", header: "Last click" },
   { accessorKey: "enabled", header: "Enabled" },
+  { accessorKey: "listed", header: "In sitemap" },
   { id: "actions", header: "" },
 ];
 
@@ -191,7 +192,13 @@ const modalOpen = ref(false);
 const saving = ref(false);
 const editingId = ref<string | null>(null);
 
-const form = reactive({ description: "", enabled: true, slug: "", url: "" });
+const form = reactive({
+  description: "",
+  enabled: true,
+  listed: true,
+  slug: "",
+  url: "",
+});
 
 const slugError = computed(() => {
   const slug = form.slug.trim().toLowerCase();
@@ -267,7 +274,13 @@ const randomSlug = () => {
 
 const openCreate = () => {
   editingId.value = null;
-  Object.assign(form, { description: "", enabled: true, slug: "", url: "" });
+  Object.assign(form, {
+    description: "",
+    enabled: true,
+    listed: true,
+    slug: "",
+    url: "",
+  });
   modalOpen.value = true;
 };
 
@@ -276,6 +289,7 @@ const openEdit = (link: LinkRow) => {
   Object.assign(form, {
     description: link.description,
     enabled: link.enabled,
+    listed: link.listed,
     slug: link.slug,
     url: link.url,
   });
@@ -325,13 +339,17 @@ const save = async () => {
 
 // --- Row actions -----------------------------------------------------------
 
-const toggleEnabled = async (link: LinkRow, enabled: boolean) => {
+const toggleField = async (
+  link: LinkRow,
+  field: "enabled" | "listed",
+  value: boolean,
+) => {
   try {
     await $fetch(`/api/links/${link.id}`, {
-      body: { enabled },
+      body: { [field]: value },
       method: "PATCH",
     });
-    link.enabled = enabled;
+    link[field] = value;
   } catch (error) {
     toast.add({
       color: "error",
@@ -451,7 +469,14 @@ const copyLink = async (link: LinkRow) => {
         <template #enabled-cell="{ row }">
           <USwitch
             :model-value="row.original.enabled"
-            @update:model-value="toggleEnabled(row.original, $event)"
+            @update:model-value="toggleField(row.original, 'enabled', $event)"
+          />
+        </template>
+
+        <template #listed-cell="{ row }">
+          <USwitch
+            :model-value="row.original.listed"
+            @update:model-value="toggleField(row.original, 'listed', $event)"
           />
         </template>
 
@@ -565,6 +590,14 @@ const copyLink = async (link: LinkRow) => {
 
           <UFormField name="enabled">
             <USwitch v-model="form.enabled" label="Enabled" />
+          </UFormField>
+
+          <UFormField name="listed">
+            <USwitch
+              v-model="form.listed"
+              label="Show in sitemap"
+              description="List this link in sitemap.xml and llms.txt"
+            />
           </UFormField>
         </form>
       </template>
