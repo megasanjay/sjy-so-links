@@ -5,9 +5,11 @@ export const RESERVED_SLUGS = new Set([
   "api",
   "favicon.ico",
   "links",
+  "llms.txt",
   "login",
   "robots.txt",
   "signup",
+  "sitemap.xml",
 ]);
 
 // Lowercase letters, digits, dashes and underscores; must start with a letter or digit.

@@ -22,8 +22,19 @@ useHead({
   ],
 });
 
+const description =
+  "Personal link shortener for Sanjay Soundarajan's apps and repos.";
+
 useSeoMeta({
   titleTemplate: "%s - sjy.so",
+  description,
+  ogDescription: description,
+  ogSiteName: "sjy.so",
+  ogTitle: "sjy.so",
+  ogType: "website",
+  twitterCard: "summary",
+  twitterDescription: description,
+  twitterTitle: "sjy.so",
 });
 </script>
 
