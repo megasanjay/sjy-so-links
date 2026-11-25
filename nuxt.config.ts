@@ -18,13 +18,9 @@ export default defineNuxtConfig({
     "nuxt-explicit-imports",
   ],
 
-  // Do NOT read process.env here: values would be frozen into the build output.
-  // Values here can be overridden at runtime with NUXT_* env vars.
   runtimeConfig: {
     public: {
-      // Allow new accounts at /signup. Off by default so strangers can't
-      // create redirects on the domain.
-      enableSignup: true,
+      enableSignup: false,
     },
   },
 
